@@ -5,7 +5,7 @@
         "dstrgb": "1-srcalpha"
     },
     "vertex": "blit",
-    "fragment": "totem-impact-frames:impact",
+    "fragment": "impact-frames:impact",
     "attributes": [ "Position" ],
     "samplers": [
         { "name": "DiffuseSampler" }

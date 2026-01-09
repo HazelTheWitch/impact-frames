@@ -1,9 +1,10 @@
 {
 	"required": true,
-	"package": "gay.frot.mixin.client",
+	"package": "dev.hazelthewitch.mixin.client",
 	"compatibilityLevel": "JAVA_21",
 	"client": [
-		"LivingEntityMixin"
+		"LivingEntityMixin",
+		"WorldRendererMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1
