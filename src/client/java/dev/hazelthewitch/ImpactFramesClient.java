@@ -14,77 +14,88 @@ import net.minecraft.client.render.FrameGraphBuilder;
 import net.minecraft.client.render.GameRenderer;
 import net.minecraft.client.util.Handle;
 import net.minecraft.util.Identifier;
+import net.minecraft.util.Pair;
+import net.minecraft.util.Util;
 import org.jetbrains.annotations.NotNull;
 import org.jspecify.annotations.Nullable;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 
 public class ImpactFramesClient implements ClientModInitializer {
 	public static final Identifier IMPACT_FRAME_SHADER_ID = ImpactFrames.id("impact");
-	public static int impactFrames = 0;
+	private static final List<Pair<Long, Boolean>> impactFrames = new ArrayList<>();
+	private static long currentFrameStartedAt = 0;
 
 	private static Framebuffer impactBuffer;
 
+	public static final long TICK_DURATION = 50;
+
+	public static void addImpactFrame(long duration, long cooldown) {
+		impactFrames.add(new Pair<>(duration, true));
+		impactFrames.add(new Pair<>(cooldown, false));
+
+		currentFrameStartedAt = Util.getMeasuringTimeMs();
+	}
+
 	@Override
 	public void onInitializeClient() {
-		ClientTickEvents.END_CLIENT_TICK.register(client -> {
-			if (impactFrames > 0) {
-				impactFrames -= 1;
-			}
-		});
-
 		WorldRenderEvents.END_MAIN.register(this::renderImpactFrame);
 	}
 
 	private void renderImpactFrame(WorldRenderContext context) {
-		if (impactFrames <= 0 ) {
+		long now = Util.getMeasuringTimeMs();
+
+		while (!impactFrames.isEmpty() && now - currentFrameStartedAt > impactFrames.getFirst().getLeft()) {
+			currentFrameStartedAt = currentFrameStartedAt + impactFrames.getFirst().getLeft());
+			impactFrames.removeFirst();
+		}
+
+		if (impactFrames.isEmpty() || !impactFrames.getFirst().getRight()) {
 			return;
 		}
 
 		FrameGraphBuilder builder = new FrameGraphBuilder();
 
         GameRenderer renderer = context.gameRenderer();
-			if (renderer instanceof GameRendererPoolAccessor accessor) {
-				MinecraftClient client = MinecraftClient.getInstance();
-				Framebuffer mainBuffer = client.getFramebuffer();
-				int width = mainBuffer.textureWidth;
-				int height = mainBuffer.textureHeight;
+		if (renderer instanceof GameRendererPoolAccessor accessor) {
+			MinecraftClient client = MinecraftClient.getInstance();
+			Framebuffer mainBuffer = client.getFramebuffer();
+			int width = mainBuffer.textureWidth;
+			int height = mainBuffer.textureHeight;
 
-				if (ImpactFramesClient.impactBuffer == null || ImpactFramesClient.impactBuffer.textureWidth != width || ImpactFramesClient.impactBuffer.textureHeight != height) {
-					ImpactFramesClient.impactBuffer = new SimpleFramebuffer("swap", width, height, true);
-				}
-
-				PostEffectProcessor.FramebufferSet framebufferSet = new PostEffectProcessor.FramebufferSet() {
-					private final Map<Identifier, Handle<Framebuffer>> objectNodeMap = new HashMap<>();
-
-					{
-						Handle<Framebuffer> main = builder.createObjectNode("main", mainBuffer);
-						objectNodeMap.put(PostEffectProcessor.MAIN, main);
-
-						Handle<Framebuffer> impact = builder.createObjectNode("swap", ImpactFramesClient.impactBuffer);
-						objectNodeMap.put(ImpactFrames.id("swap"), impact);
-					}
-
-					@Override
-					public void set(Identifier id, Handle<Framebuffer> framebuffer) {
-						objectNodeMap.put(id, framebuffer);
-					}
-
-					@Override
-					public @Nullable Handle<Framebuffer> get(Identifier id) {
-						return objectNodeMap.get(id);
-					}
-				};
-
-				PostEffectProcessor effect = client.getShaderLoader().loadPostEffect(ImpactFramesClient.IMPACT_FRAME_SHADER_ID, DefaultFramebufferSet.MAIN_ONLY);
-				if (effect != null) {
-					effect.render(builder, width, height, framebufferSet);
-				}
-
-				builder.run(accessor.getPool());
+			if (ImpactFramesClient.impactBuffer == null || ImpactFramesClient.impactBuffer.textureWidth != width || ImpactFramesClient.impactBuffer.textureHeight != height) {
+				ImpactFramesClient.impactBuffer = new SimpleFramebuffer("swap", width, height, true);
 			}
+
+			PostEffectProcessor.FramebufferSet framebufferSet = new PostEffectProcessor.FramebufferSet() {
+				private final Map<Identifier, Handle<Framebuffer>> objectNodeMap = new HashMap<>();
+
+				{
+					Handle<Framebuffer> main = builder.createObjectNode("main", mainBuffer);
+					objectNodeMap.put(PostEffectProcessor.MAIN, main);
+
+					Handle<Framebuffer> impact = builder.createObjectNode("swap", ImpactFramesClient.impactBuffer);
+					objectNodeMap.put(ImpactFrames.id("swap"), impact);
+				}
+
+				@Override
+				public void set(Identifier id, Handle<Framebuffer> framebuffer) {
+					objectNodeMap.put(id, framebuffer);
+				}
+
+				@Override
+				public @Nullable Handle<Framebuffer> get(Identifier id) {
+					return objectNodeMap.get(id);
+				}
+			};
+
+			PostEffectProcessor effect = client.getShaderLoader().loadPostEffect(ImpactFramesClient.IMPACT_FRAME_SHADER_ID, DefaultFramebufferSet.MAIN_ONLY);
+			if (effect != null) {
+				effect.render(builder, width, height, framebufferSet);
+			}
+
+			builder.run(accessor.getPool());
+		}
 	}
 
 	@NotNull
