@@ -4,7 +4,9 @@
 	"compatibilityLevel": "JAVA_21",
 	"client": [
 		"LivingEntityMixin",
-		"GameRendererMixin"
+		"GameRendererMixin",
+		"WardenSonicAttackMixin",
+		"MaceItemMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1

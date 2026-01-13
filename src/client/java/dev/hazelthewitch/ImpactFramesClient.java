@@ -46,7 +46,7 @@ public class ImpactFramesClient implements ClientModInitializer {
 		long now = Util.getMeasuringTimeMs();
 
 		while (!impactFrames.isEmpty() && now - currentFrameStartedAt > impactFrames.getFirst().getLeft()) {
-			currentFrameStartedAt = currentFrameStartedAt + impactFrames.getFirst().getLeft());
+			currentFrameStartedAt = currentFrameStartedAt + impactFrames.getFirst().getLeft();
 			impactFrames.removeFirst();
 		}
 
