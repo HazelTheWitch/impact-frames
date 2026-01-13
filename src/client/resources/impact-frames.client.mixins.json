@@ -3,7 +3,8 @@
 	"package": "dev.hazelthewitch.mixin.client",
 	"compatibilityLevel": "JAVA_21",
 	"client": [
-		"LivingEntityMixin"
+		"LivingEntityMixin",
+		"GameRendererMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1

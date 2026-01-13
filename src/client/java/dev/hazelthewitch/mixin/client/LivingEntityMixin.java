@@ -13,7 +13,7 @@ public class LivingEntityMixin {
     @Inject(at = @At("RETURN"), method = "tryUseDeathProtector(Lnet/minecraft/entity/damage/DamageSource;)Z")
     private void injected(CallbackInfoReturnable<Boolean> cir) {
         if (cir.getReturnValue()) {
-            ImpactFramesClient.impact_frames = 4;
+            ImpactFramesClient.impactFrames = 4;
         }
     }
 }

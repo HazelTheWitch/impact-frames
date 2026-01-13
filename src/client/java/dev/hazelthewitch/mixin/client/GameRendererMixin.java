@@ -1,5 +1,6 @@
 package dev.hazelthewitch.mixin.client;
 
+import dev.hazelthewitch.GameRendererPoolAccessor;
 import dev.hazelthewitch.ImpactFrames;
 import dev.hazelthewitch.ImpactFramesClient;
 import net.minecraft.client.MinecraftClient;
@@ -14,21 +15,13 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(GameRenderer.class)
-public class GameRendererMixin {
+public class GameRendererMixin implements GameRendererPoolAccessor {
     @Final
     @Shadow
     private Pool pool;
 
-    @Final
-    @Shadow
-    private MinecraftClient client;
-
-    @Inject(at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/WorldRenderer;drawEntityOutlinesFramebuffer()V", shift = At.Shift.AFTER), method = "render")
-    private void injected(RenderTickCounter tickCounter, boolean tick, CallbackInfo ci) {
-        try (PostEffectProcessor effect = this.client.getShaderLoader().loadPostEffect(ImpactFramesClient.IMPACT_FRAME_SHADER_ID, DefaultFramebufferSet.MAIN_ONLY)) {
-            if (effect != null) {
-                effect.render(this.client.getFramebuffer(), this.pool);
-            }
-        }
+    @Override
+    public Pool getPool() {
+        return this.pool;
     }
 }
