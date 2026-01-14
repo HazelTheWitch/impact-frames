@@ -6,7 +6,8 @@
 		"LivingEntityMixin",
 		"GameRendererMixin",
 		"WardenSonicAttackMixin",
-		"MaceItemMixin"
+		"MaceItemMixin",
+		"WitherMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1
